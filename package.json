@@ -1,37 +1,49 @@
 {
-  "name": "@szymon.dukla/node-loggly-bulk",
-  "description": "A client implementation for Loggly cloud Logging-as-a-Service API",
-  "version": "2.2.4",
+  "name": "@szymon.dukla/winston-loggly-bulk",
+  "version": "4.0.0",
+  "description": "A Loggly transport for winston",
   "author": "Szymon Dukla <s.dukla@szymondukla.com>",
+  "contributors": [
+    {
+      "name": "Loggly",
+      "email": "opensource@loggly.com",
+      "url": "https://github.com/loggly"
+    },
+    {
+      "name": "Shweta Jain",
+      "email": "shweta.jain@psquickit.com",
+      "url": "https://github.com/shwetajain148"
+    }
+  ],
+  "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/SzymonDukla/node-loggly-bulk.git"
+    "url": "https://github.com/SzymonDukla/winston-loggly-bulk.git"
   },
   "keywords": [
-    "cloud computing",
-    "api",
+    "loggly",
     "logging",
-    "loggly"
+    "sysadmin",
+    "tools",
+    "winston"
   ],
   "dependencies": {
-    "json-stringify-safe": "5.0.x",
-    "moment": "^2.18.1",
-    "request": ">=2.76.0 <3.0.0"
+    "@szymon.dukla/node-loggly-bulk": "^2.2.4",
+    "lodash.clonedeep": "^4.5.0",
+    "winston": "^3.2",
+    "winston-transport": "^4.3.0"
   },
   "devDependencies": {
-    "common-style": "^3.1.0",
-    "nock": "~7.2.2",
-    "vows": "0.8.x"
+    "jest": "^25.2.6"
   },
-  "main": "./lib/loggly",
+  "main": "./lib/winston-loggly",
   "scripts": {
-    "pretest": "common lib/**/*.js lib/*.js test/helpers.js",
-    "test": "vows test/*-test.js --spec",
-    "pretest-as-mock": "common lib/**/*.js lib/*.js test-as-mock/helpers.js",
-    "test-as-mock": "vows test-as-mock/*-test.js --spec"
+    "test": "jest"
   },
-  "license": "MIT",
   "engines": {
-    "node": ">= 0.8.0"
+    "node": ">= 6.4.0"
+  },
+  "prettier": {
+    "singleQuote": true
   }
 }

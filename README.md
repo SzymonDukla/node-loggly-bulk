@@ -1,194 +1,122 @@
-# node-loggly-bulk
+# winston-loggly-bulk
 
-[![Version npm](https://img.shields.io/npm/v/node-loggly-bulk.svg?style=flat-square)](https://www.npmjs.com/package/node-loggly-bulk)[![npm Downloads](https://img.shields.io/npm/dm/node-loggly-bulk.svg?style=flat-square)](https://www.npmjs.com/package/node-loggly-bulk)
+A [Loggly][0] transport for [winston][1].
 
-[![NPM](https://nodei.co/npm/node-loggly-bulk.png?downloads=true&downloadRank=true)](https://nodei.co/npm/node-loggly-bulk/)
+[![Version npm](https://img.shields.io/npm/v/winston-loggly-bulk.svg?style=flat-square)](https://www.npmjs.com/package/winston-loggly-bulk)[![npm Downloads](https://img.shields.io/npm/dm/winston-loggly-bulk.svg?style=flat-square)](https://www.npmjs.com/package/winston-loggly-bulk)
+
+[![NPM](https://nodei.co/npm/winston-loggly-bulk.png?downloads=true&downloadRank=true)](https://nodei.co/npm/winston-loggly-bulk/)
 
 A client implementation for Loggly in node.js. Check out Loggly's [Node logging documentation](https://www.loggly.com/docs/nodejs-logs/) for more.
 
 ## Usage
 
-The `node-loggly-bulk` library is compliant with the [Loggly API][api]. Using `node-loggly-bulk` is easy for a variety of scenarios: logging, working with devices and inputs, searching, and facet searching.
+``` js
+  var winston = require('winston');
 
-### Getting Started
-Before we can do anything with Loggly, we have to create a client with valid credentials. We will authenticate for you automatically:
+  //
+  // Requiring `winston-loggly-bulk` will expose
+  // `winston.transports.Loggly`
+  //
+  var {Loggly} = require('winston-loggly-bulk');
+
+  winston.add(new Loggly({options}));
+```
+
+The Loggly transport is based on [Nodejitsu's][2] [node-loggly][3] implementation of the [Loggly][0] API. If you haven't heard of Loggly before, you should probably read their [value proposition][4]. The Loggly transport takes the following options.
+
+* __subdomain:__ The subdomain of your Loggly account. *[required]*
+* __token:__ The access token (previously inputToken) *[required]*
+* __auth__: The authentication information for your Loggly account.
+* __json:__ If true, messages will be sent to Loggly as JSON.
+* __tags:__ An array of tags to send to loggly.
+* __isBulk:__ If true, sends messages using bulk url
+* __stripColors:__ Strip color codes from the logs before sending
+* __bufferOptions:__ Buffer options has two configurations.
+  - __size:__ Number of logs to be buffered.
+  - __retriesInMilliSeconds:__ Time in milliseconds to retry sending buffered logs. 
+* __timestamp:__ If false, library will not include timestamp in log events. 
+  - __Note:__ Library includes timestamp by default when we do not set timestamp option.
+* __networkErrorsOnConsole:__ The library keep track of different network errors and can log them to console. By default, logging errors on console is disabled and can be enabled easily by setting this parameter's value to `true`. If true, all the network errors will be logged to console.
+
+## Sample Working Code Snippet
 
 ``` js
-  var loggly = require('node-loggly-bulk');
+var winston  = require('winston');
+var { Loggly } = require('winston-loggly-bulk');
 
-  var client = loggly.createClient({
-    token: "your-really-long-input-token",
-    subdomain: "your-subdomain",
-    auth: {
-      username: "your-username",
-      password: "your-password"
-    },
-    //
-    // Optional: Tag to send with EVERY log message
-    //
-    tags: ['global-tag']
-  });
-```
-
-### Logging
-There are two ways to send log information to Loggly via node-loggly-bulk. The first is to simply call client.log with an appropriate input token:
-
-``` js
-  client.log('127.0.0.1 - Theres no place like home', function (err, result) {
-    // Do something once you've logged
-  });
-```
-
-Note that the callback in the above example is optional, if you prefer the 'fire and forget' method of logging:
-
-``` js
-  client.log('127.0.0.1 - Theres no place like home');
-```
-
-### Logging with Tags
-
-If you're using Loggly's [tags](https://www.loggly.com/docs/tags/) functionality, simply include an array of tags as the second argument to the `log` method:
-
-``` js
-  client.log('127.0.0.1 - Theres no place like home', [ 'dorothy' ], function (err, result) {
-    // Do something once you've logged
-  });
-```
-
-*note* Tags passed into the log function will be merged with any global tags you may have defined.
-
-
-### Logging Shallow JSON Objects as a String
-In addition to logging pure strings it is also possible to pass shallow JSON object literals (i.e. no nested objects) to client.log(..) or input.log(..) methods, which will get converted into the [Loggly recommended string representation][sending-data]. So
-
-``` js
-  var source = {
-    foo: 1,
-    bar: 2,
-    buzz: 3
-  };
-
-  input.log(source);
-```
-
-will be logged as:
-
-```
-  foo=1,bar=2,buzz=3
-```
-
-### Logging JSON Objects
-It is also possible to log complex objects using the new JSON capabilities of Loggly. To enable JSON functionality in the client simply add 'json: true' to the configuration:
-
-``` js
-  var config = {
-    subdomain: "your-subdomain",
-    auth: {
-      username: "your-username",
-      password: "your-password"
-    },
+winston.add(new Loggly({
+    token: "TOKEN",
+    subdomain: "SUBDOMAIN",
+    tags: ["Winston-NodeJS"],
     json: true
-  };
+}));
+
+winston.log('info', "Hello World from Node.js!");
 ```
 
-When the json flag is enabled, objects will be converted to JSON using JSON.stringify before being transmitted to Loggly. So
+## Buffer Support
+
+This library has buffer support during temporary network outage. User can configure size of buffer (no. of logs to be stored during network outage).
+
+Add these below configuration in code snippet to override the default values of buffer option  __size__ and __retriesInMilliSeconds__.
 
 ``` js
-  var source = {
-    foo: 1,
-    bar: 2,
-    buzz: {
-      sheep: 'jumped',
-      times: 10
-    }
-  };
-
-  input.log(source);
+bufferOptions: {
+  size: 1000,
+  retriesInMilliSeconds: 60 * 1000
+}  
 ```
 
-will be logged as:
+* __Note:__ The default value of buffer size and retries in milliseconds are 500 and 30000 (30 seconds) respectively.
 
-``` json
-  { "foo": 1, "bar": 2, "buzz": {"sheep": "jumped", "times": 10 }}
-```
+## Flush logs and exit
 
-### Logging arrays
-It is possible to send arrays, which will result in one single request to Loggly.
+Our library uses ajax requests to send logs to Loggly, and as ajax requests take time to complete, logs can be lost when process.exit() is called because it forces an immediate exit. To exit gracefully and ensure that the last logs get to Loggly, we created a function called flushLogsAndExit(). It waits for 10 seconds and then calls process.exit() itself. This allows enough time for the logs to be sent to Loggly.
+
+Here is an example of how to use the method:
 
 ``` js
-  input.log([ {iam:'number 1'}, {iam:'number 2'} ])
+var winston = require('winston');
+var { flushLogsAndExit } = require('winston-loggly-bulk');
+
+winston.log("info", "Hello World from Node.js!");
+flushLogsAndExit();
 ```
 
-### Searching
-[Searching][search-api] with node-loggly-bulk is easy. All you have to do is use the search() method defined on each Loggly client:
+## Motivation
 
-``` js
-  var util = require('util');
+`tldr;?`: To break the [winston][1] codebase into small modules that work together.
 
-  client.search('404', function (err, results) {
-    // Inspect the result set
-    console.dir(results.events);
-  });
-```
-
-The search() method can also take an Object parameter that allows you to set additional search parameters such as: rows, from, until, etc.
-
-``` js
-  var util = require('util');
-
-  client.search({ query: '404', rows: 10 })
-    .run(function (err, results) {
-      // Inspect the result set
-      console.dir(results.events);
-    });
-```
-
-See the [Loggly search guide][search] for more details on how to effectively search through your Loggly logs.
+The [winston][1] codebase has been growing significantly with contributions and other logging transports. This is **awesome**. However, taking a ton of additional dependencies just to do something simple like logging to the Console and a File is overkill.
 
 ## Installation
 
-### Installing npm (node package manager)
 ``` bash
-  $ curl http://npmjs.org/install.sh | sh
+  npm install winston-loggly-bulk
 ```
 
-### Installing node-loggly-bulk
+Note: If you are using npm version 2, please run the below command:
+
 ``` bash
-  $ npm install node-loggly-bulk
+  npm install winston-loggly-bulk winston
 ```
 
 ## Run Tests
 
-### Run Tests by sending events to your Loggly Account
-All of the node-loggly-bulk tests are written in [vows][vows], and cover all of the use cases described above. You will need to add your Loggly username, password, subdomain, and your loggly token to test/config.json before running tests.
-
-``` js
-  {
-    "token": "your-really-long-token-you-got-when-you-created-an-http-input",
-    "subdomain": "your-subdomain",
-    "auth": {
-      "username": "your-username",
-      "password": "your-password"
-    }
-  }
-```
-
-Once you have valid Loggly credentials you can run tests with [vows][vows]:
+Written in Jest. Testing that log events are correctly passed on.
 
 ``` bash
-  $ npm test
-```
-### Run Tests with Mock HTTP Request
-To mock the HTTP requests and run test cases in your local machine you can run the following command
-```bash
-  $ npm run test-as-mock
+  npm test
 ```
 
 #### Author: [Charlie Robbins](http://www.github.com/indexzero)
-#### Contributors: [Marak Squires](http://github.com/marak), [hij1nx](http://github.com/hij1nx), [Kord Campbell](http://loggly.com), [Erik Hedenström](http://github.com/ehedenst),
 
-[api]: http://www.loggly.com/docs/api-overview/
-[sending-data]: http://www.loggly.com/docs/api-sending-data/
-[search-api]: http://www.loggly.com/docs/api-retrieving-data/
-[search]: http://www.loggly.com/docs/search-overview/
-[vows]: http://vowsjs.org
+#### Contributors: [Loggly](http://github.com/loggly), [Shweta Jain](http://github.com/shwetajain148),
+
+[0]: http://loggly.com
+[1]: https://github.com/winstonjs/winston
+[2]: http://nodejitsu.com
+[3]: https://github.com/nodejitsu/node-loggly
+[4]: http://www.loggly.com/product/
+[5]: http://vowsjs.org
+[6]: http://npmjs.org
